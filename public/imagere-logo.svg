@@ -1,0 +1,21 @@
+<svg width="300" height="100" viewBox="0 0 300 100" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .text { font-family: Arial, sans-serif; font-weight: bold; font-size: 48px; }
+    .blue { fill: #3b82f6; }
+    .dark-blue { fill: #1d4ed8; }
+    .light-blue { fill: #60a5fa; }
+    @media (prefers-color-scheme: dark) {
+      .text { fill: #f1f5f9; }
+    }
+  </style>
+  
+  <!-- Camera shape -->
+  <rect x="25" y="30" width="80" height="60" rx="10" class="blue" />
+  <rect x="50" y="20" width="30" height="10" rx="5" class="blue" />
+  <circle cx="65" cy="60" r="20" class="dark-blue" />
+  <circle cx="65" cy="60" r="10" class="light-blue" />
+  <circle cx="95" cy="40" r="5" fill="white" />
+  
+  <!-- Text -->
+  <text x="120" y="70" class="text">Imagere</text>
+</svg> 

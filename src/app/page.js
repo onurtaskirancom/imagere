@@ -1,95 +1,227 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
+
+import { useState, useRef } from 'react';
+import styles from './page.module.css';
 
 export default function Home() {
+  const [processedImage, setProcessedImage] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState(null);
+  const [formParams, setFormParams] = useState({
+    width: '',
+    height: '',
+    quality: '80',
+    format: '',
+  });
+  
+  const fileInputRef = useRef(null);
+  
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormParams((prev) => ({ ...prev, [name]: value }));
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    
+    const fileInput = fileInputRef.current;
+    if (!fileInput.files || fileInput.files.length === 0) {
+      setError('Please select an image to process');
+      return;
+    }
+    
+    setIsProcessing(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('image', fileInput.files[0]);
+      
+      // Build URL with query parameters
+      let url = '/api/imagere';
+      const params = new URLSearchParams();
+      
+      if (formParams.width) params.append('width', formParams.width);
+      if (formParams.height) params.append('height', formParams.height);
+      if (formParams.quality) params.append('quality', formParams.quality);
+      if (formParams.format) params.append('format', formParams.format);
+      
+      const queryString = params.toString();
+      if (queryString) {
+        url += `?${queryString}`;
+      }
+      
+      // Make the API request
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to process image');
+      }
+      
+      // Create a URL for the processed image blob
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+      setProcessedImage(imageUrl);
+    } catch (err) {
+      setError(err.message || 'Failed to process image');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
+  const resetForm = () => {
+    if (processedImage) {
+      URL.revokeObjectURL(processedImage);
+    }
+    setProcessedImage(null);
+    setError(null);
+    
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    
+    setFormParams({
+      width: '',
+      height: '',
+      quality: '80',
+      format: '',
+    });
+  };
+  
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.js</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+    <main className={styles.main}>
+      <div className={styles.container}>
+        <h1 className={styles.title}>Imagere</h1>
+        <p className={styles.description}>
+          Upload and process your images without losing quality
+        </p>
+        
+        {!processedImage ? (
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <div className={styles.formGroup}>
+              <label htmlFor="image" className={styles.label}>
+                Select Image
+              </label>
+              <input
+                type="file"
+                id="image"
+                name="image"
+                accept="image/*"
+                ref={fileInputRef}
+                className={styles.fileInput}
+                required
+              />
+            </div>
+            
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label htmlFor="width" className={styles.label}>
+                  Width (px)
+                </label>
+                <input
+                  type="number"
+                  id="width"
+                  name="width"
+                  value={formParams.width}
+                  onChange={handleInputChange}
+                  placeholder="Original width"
+                  min="1"
+                  className={styles.input}
+                />
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label htmlFor="height" className={styles.label}>
+                  Height (px)
+                </label>
+                <input
+                  type="number"
+                  id="height"
+                  name="height"
+                  value={formParams.height}
+                  onChange={handleInputChange}
+                  placeholder="Original height"
+                  min="1"
+                  className={styles.input}
+                />
+              </div>
+            </div>
+            
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label htmlFor="quality" className={styles.label}>
+                  Quality (1-100)
+                </label>
+                <input
+                  type="number"
+                  id="quality"
+                  name="quality"
+                  value={formParams.quality}
+                  onChange={handleInputChange}
+                  min="1"
+                  max="100"
+                  className={styles.input}
+                />
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label htmlFor="format" className={styles.label}>
+                  Format
+                </label>
+                <select
+                  id="format"
+                  name="format"
+                  value={formParams.format}
+                  onChange={handleInputChange}
+                  className={styles.select}
+                >
+                  <option value="">Original format</option>
+                  <option value="jpeg">JPEG</option>
+                  <option value="png">PNG</option>
+                  <option value="webp">WebP</option>
+                </select>
+              </div>
+            </div>
+            
+            {error && <div className={styles.error}>{error}</div>}
+            
+            <button
+              type="submit"
+              className={styles.button}
+              disabled={isProcessing}
+            >
+              {isProcessing ? 'Processing...' : 'Process Image'}
+            </button>
+          </form>
+        ) : (
+          <div className={styles.result}>
+            <div className={styles.imageContainer}>
+              <img
+                src={processedImage}
+                alt="Processed"
+                className={styles.processedImage}
+              />
+            </div>
+            
+            <div className={styles.buttonGroup}>
+              <a
+                href={processedImage}
+                download="processed-image.jpg"
+                className={styles.button}
+              >
+                Download
+              </a>
+              <button onClick={resetForm} className={styles.buttonOutline}>
+                Process Another Image
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }

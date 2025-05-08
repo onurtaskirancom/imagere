@@ -1,21 +1,32 @@
 {
   "name": "imagere",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "description": "Image resizing and optimization tool without quality loss",
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
+  "keywords": [
+    "image",
+    "resize",
+    "sharp",
+    "optimize",
+    "nextjs",
+    "processing"
+  ],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "next": "15.3.2"
+    "formidable": "^2.1.2",
+    "next": "14.1.1",
+    "react": "^18",
+    "react-dom": "^18",
+    "sharp": "^0.33.2"
   },
   "devDependencies": {
-    "eslint": "^9",
-    "eslint-config-next": "15.3.2",
-    "@eslint/eslintrc": "^3"
+    "eslint": "^8",
+    "eslint-config-next": "14.1.1"
   }
 }
