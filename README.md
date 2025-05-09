@@ -1,6 +1,8 @@
 # Imagere
 
-![Imagere logo](public/imagere-logo.png)
+<div align="center">
+  <img src="./public/imagere-logo.svg" width="300" alt="Imagere logo" />
+</div>
 
 Imagere is a powerful and efficient image processing tool built with Next.js and Sharp. It allows you to resize and optimize images without losing quality.
 
@@ -17,13 +19,15 @@ Imagere is a powerful and efficient image processing tool built with Next.js and
 
 ## Demo
 
-A live demo is available at: https://imagere.onurtaskiran.com
+A live demo is available at: [https://imagere.onurtaskiran.com](https://imagere.onurtaskiran.com)
 
 ## Screenshots
 
 <div align="center">
-  <img src="public/screenshots/light-mode.png" width="48%" alt="Light Mode" />
-  <img src="public/screenshots/dark-mode.png" width="48%" alt="Dark Mode" />
+  <p>Light Mode</p>
+  <img src="./public/screenshots/light-mode.jpg" width="80%" alt="Light Mode" />
+  <p>Dark Mode</p>
+  <img src="./public/screenshots/dark-mode.jpg" width="80%" alt="Dark Mode" />
 </div>
 
 ## Tech Stack
@@ -128,7 +132,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Author
 
