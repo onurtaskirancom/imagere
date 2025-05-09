@@ -17,18 +17,13 @@ Imagere is a powerful and efficient image processing tool built with Next.js and
 - **Dark mode support** with system preference detection
 - **Modern responsive UI** that works on all devices
 
-## Demo
+## About
 
-A live demo is available at: [https://imagere.onurtaskiran.com](https://imagere.onurtaskiran.com)
+Imagere is a self-hosted image processing tool that can be deployed to your own server or cloud provider. Once deployed, it provides an easy-to-use interface for resizing and optimizing images, as well as a simple API for programmatic access.
 
 ## Screenshots
 
-<div align="center">
-  <p>Light Mode</p>
-  <img src="./public/screenshots/light-mode.jpg" width="80%" alt="Light Mode" />
-  <p>Dark Mode</p>
-  <img src="./public/screenshots/dark-mode.jpg" width="80%" alt="Dark Mode" />
-</div>
+To see the application in action, you can clone the repository and run it locally following the installation instructions below.
 
 ## Tech Stack
 
