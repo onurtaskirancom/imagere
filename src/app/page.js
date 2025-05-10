@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import styles from './page.module.css';
+import ThemeToggle from './components/ThemeToggle';
 
 export default function Home() {
   const [processedImage, setProcessedImage] = useState(null);
@@ -95,6 +96,7 @@ export default function Home() {
   return (
     <main className={styles.main}>
       <div className={styles.container}>
+        <ThemeToggle />
         <h1 className={styles.title}>Imagere</h1>
         <p className={styles.description}>
           Upload and process your images without losing quality

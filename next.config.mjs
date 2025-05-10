@@ -1,17 +1,35 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-    responseLimit: '10mb',
+  webpack: (config) => {
+    // Webpack konfigürasyonu - önemli: config mutlaka döndürülmeli
+    return config;
   },
+  // Server Actions için boyut limiti
   experimental: {
-    serverExternalPackages: ['sharp'],
     serverActions: {
-      bodySizeLimit: '10mb',
-    },
+      bodySizeLimit: '10mb'
+    }
+  },
+  // Sharp paketi için harici paket desteği
+  serverExternalPackages: ['sharp'],
+  // Image optimizasyonu için domain ayarları
+  images: {
+    domains: ['localhost'],
+  },
+  // API route'ları için boyut limitleri
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,POST,OPTIONS' },
+        ],
+      },
+    ];
   },
 };
 
-export default nextConfig;
+// ESM formatında export
+export default nextConfig; 
