@@ -48,7 +48,7 @@
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  color: var(--text-primary);
+  color: var(--accent-color);
   text-align: center;
 }
 
@@ -92,6 +92,10 @@
   transition: border-color 0.15s ease;
 }
 
+.input::placeholder, .select::placeholder {
+  color: var(--text-secondary);
+}
+
 .input:focus, .select:focus, .fileInput:focus {
   outline: none;
   border-color: var(--button-primary);
@@ -111,6 +115,7 @@
   text-align: center;
   display: inline-block;
   text-decoration: none;
+  box-shadow: 0 4px 12px rgba(76,112,255,0.3);
 }
 
 .button:hover {
@@ -135,7 +140,7 @@
 }
 
 .buttonOutline:hover {
-  background-color: rgba(59, 130, 246, 0.1);
+  background-color: rgba(76, 112, 255, 0.1);
 }
 
 .result {

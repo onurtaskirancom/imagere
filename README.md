@@ -33,6 +33,21 @@ To see the application in action, you can clone the repository and run it locall
 - **CSS Modules** - For component-scoped styling
 - **CSS Variables** - For theming support (dark/light mode)
 
+## Dark Theme Color Scheme
+
+Imagere comes with a modern dark theme by default, using the following color palette:
+
+- **Background**: #1B1D23
+- **Container/Card**: #252830
+- **Input Fields**: #2E313A
+- **Input Borders**: #3E414C
+- **Primary Text**: #ECEFF4
+- **Secondary Text**: #AAB0BC
+- **Button**: #4C70FF (with hover: #6A8CFF)
+- **Accent**: #C084FC (used for the title)
+
+The theme is implemented using CSS variables, making it easy to customize or extend with additional themes.
+
 ## API Usage
 
 The API is accessible at `/api/imagere` and accepts `POST` requests with the following parameters:
