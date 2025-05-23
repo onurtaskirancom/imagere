@@ -22,9 +22,9 @@ async function processImage(buffer, options) {
     // Get image metadata
     const metadata = await image.metadata();
     
-    // Check file size limits (10MB for Vercel)
-    if (buffer.length > 10 * 1024 * 1024) {
-      throw new Error('Image file too large. Maximum size is 10MB.');
+    // Check file size limits (4MB for Vercel)
+    if (buffer.length > 4 * 1024 * 1024) {
+      throw new Error('Image file too large. Maximum size is 4MB.');
     }
     
     // Apply resize if width or height is provided
@@ -105,9 +105,9 @@ export async function POST(request) {
     });
     
     // Check file size before processing
-    if (file.size > 10 * 1024 * 1024) {
+    if (file.size > 4 * 1024 * 1024) {
       return NextResponse.json(
-        { error: 'Image file too large. Maximum size is 10MB.' },
+        { error: 'Image file too large. Maximum size is 4MB.' },
         { status: 413 }
       );
     }

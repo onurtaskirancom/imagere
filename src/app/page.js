@@ -18,6 +18,96 @@ export default function Home() {
   
   const fileInputRef = useRef(null);
   
+  // File size validation and compression
+  const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB for Vercel
+  const MAX_COMPRESSED_SIZE = 2 * 1024 * 1024; // 2MB target after compression
+  
+  const compressImage = (file, quality = 0.8) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Calculate new dimensions
+        let { width, height } = img;
+        const maxDimension = 2048; // Max 2048px on any side
+        
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = (height * maxDimension) / width;
+            width = maxDimension;
+          } else {
+            width = (width * maxDimension) / height;
+            height = maxDimension;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(resolve, 'image/jpeg', quality);
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+  
+  const handleFileSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    console.log('Original file:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      sizeInMB: (file.size / (1024 * 1024)).toFixed(2) + ' MB'
+    });
+    
+    // If file is too large, try to compress it
+    if (file.size > MAX_FILE_SIZE) {
+      setError(null);
+      
+      try {
+        console.log('File too large, compressing...');
+        const compressedFile = await compressImage(file, 0.7);
+        
+        console.log('Compressed file:', {
+          size: compressedFile.size,
+          sizeInMB: (compressedFile.size / (1024 * 1024)).toFixed(2) + ' MB'
+        });
+        
+        if (compressedFile.size > MAX_FILE_SIZE) {
+          // Try with lower quality
+          const moreCompressed = await compressImage(file, 0.5);
+          console.log('More compressed file:', {
+            size: moreCompressed.size,
+            sizeInMB: (moreCompressed.size / (1024 * 1024)).toFixed(2) + ' MB'
+          });
+          
+          if (moreCompressed.size > MAX_FILE_SIZE) {
+            setError(`Image is too large even after compression. Please use an image smaller than 4MB or with lower resolution.`);
+            e.target.value = '';
+            return;
+          }
+        }
+        
+        // Replace the file in the input
+        const dt = new DataTransfer();
+        dt.items.add(compressedFile);
+        e.target.files = dt.files;
+        
+        setError(`Image compressed from ${(file.size / (1024 * 1024)).toFixed(2)}MB to ${(compressedFile.size / (1024 * 1024)).toFixed(2)}MB`);
+      } catch (error) {
+        setError('Failed to compress image. Please try a smaller file.');
+        e.target.value = '';
+        return;
+      }
+    }
+  };
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormParams((prev) => ({ ...prev, [name]: value }));
@@ -168,6 +258,7 @@ export default function Home() {
                 ref={fileInputRef}
                 className={styles.fileInput}
                 required
+                onChange={handleFileSelect}
               />
             </div>
             

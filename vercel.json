@@ -1,7 +1,8 @@
 {
   "functions": {
     "src/app/api/imagere/route.js": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "memory": 1024
     }
   },
   "regions": ["fra1"],

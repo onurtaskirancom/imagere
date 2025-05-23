@@ -7,7 +7,7 @@ const nextConfig = {
   // Server Actions için boyut limiti
   experimental: {
     serverActions: {
-      bodySizeLimit: '10mb'
+      bodySizeLimit: '50mb'
     }
   },
   // Sharp paketi için harici paket desteği
@@ -25,6 +25,7 @@ const nextConfig = {
           { key: 'Access-Control-Allow-Credentials', value: 'true' },
           { key: 'Access-Control-Allow-Origin', value: '*' },
           { key: 'Access-Control-Allow-Methods', value: 'GET,POST,OPTIONS' },
+          { key: 'Access-Control-Max-Age', value: '86400' },
         ],
       },
     ];
