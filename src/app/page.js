@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import styles from './page.module.css';
 import ThemeToggle from './components/ThemeToggle';
 
@@ -202,10 +203,18 @@ export default function Home() {
         ) : (
           <div className={styles.result}>
             <div className={styles.imageContainer}>
-              <img
+              <Image
                 src={processedImage}
                 alt="Processed"
                 className={styles.processedImage}
+                width={800}
+                height={600}
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  objectFit: 'contain'
+                }}
+                unoptimized={true}
               />
             </div>
             
