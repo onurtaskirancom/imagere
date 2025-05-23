@@ -60,8 +60,30 @@ export default function Home() {
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to process image');
+        let errorMessage = 'Failed to process image';
+        
+        try {
+          // Try to parse JSON error
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (parseError) {
+          // If JSON parsing fails, get text response
+          const textResponse = await response.text();
+          console.error('API Error Response:', textResponse);
+          
+          // Extract meaningful error from HTML or text response
+          if (textResponse.includes('Request Entity Too Large')) {
+            errorMessage = 'Image file is too large. Please try a smaller image.';
+          } else if (textResponse.includes('Function Timeout')) {
+            errorMessage = 'Processing timeout. Please try a smaller image or reduce quality.';
+          } else if (textResponse.includes('Memory')) {
+            errorMessage = 'Out of memory. Please try a smaller image.';
+          } else {
+            errorMessage = `Server error (${response.status}): ${response.statusText}`;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
       
       // Create a URL for the processed image blob

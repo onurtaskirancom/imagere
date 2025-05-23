@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "src/app/api/imagere/route.js": {
+      "maxDuration": 30
+    }
+  },
+  "regions": ["fra1"],
+  "framework": "nextjs"
+} 
