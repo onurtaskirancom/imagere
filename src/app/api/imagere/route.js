@@ -173,10 +173,13 @@ export async function POST(request) {
     // Set cache headers
     const headers = {
       'Content-Type': contentType,
+      'Content-Length': processedBuffer.length.toString(),
       'Cache-Control': 'public, max-age=31536000, immutable',
+      'X-Image-Size': processedBuffer.length.toString(),
+      'X-Original-Size': buffer.length.toString(),
     };
     
-    console.log('Returning processed image');
+    console.log('Returning processed image with headers:', headers);
     // Return the processed image
     return new NextResponse(processedBuffer, { headers });
   } catch (error) {

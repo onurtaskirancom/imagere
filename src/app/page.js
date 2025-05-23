@@ -39,6 +39,12 @@ export default function Home() {
       const formData = new FormData();
       formData.append('image', fileInput.files[0]);
       
+      console.log('Uploading file:', {
+        name: fileInput.files[0].name,
+        size: fileInput.files[0].size,
+        type: fileInput.files[0].type
+      });
+      
       // Build URL with query parameters
       let url = '/api/imagere';
       const params = new URLSearchParams();
@@ -53,25 +59,30 @@ export default function Home() {
         url += `?${queryString}`;
       }
       
+      console.log('API URL:', url);
+
       // Make the API request
       const response = await fetch(url, {
         method: 'POST',
         body: formData,
       });
-      
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
         let errorMessage = 'Failed to process image';
         
+        // Get response text first, then try to parse as JSON
+        const textResponse = await response.text();
+        console.error('API Error Response:', textResponse);
+        
         try {
-          // Try to parse JSON error
-          const errorData = await response.json();
+          // Try to parse the text as JSON
+          const errorData = JSON.parse(textResponse);
           errorMessage = errorData.error || errorMessage;
         } catch (parseError) {
-          // If JSON parsing fails, get text response
-          const textResponse = await response.text();
-          console.error('API Error Response:', textResponse);
-          
-          // Extract meaningful error from HTML or text response
+          // If JSON parsing fails, extract meaningful error from text response
           if (textResponse.includes('Request Entity Too Large')) {
             errorMessage = 'Image file is too large. Please try a smaller image.';
           } else if (textResponse.includes('Function Timeout')) {
@@ -86,9 +97,27 @@ export default function Home() {
         throw new Error(errorMessage);
       }
       
+      // Check if response is actually an image
+      const contentType = response.headers.get('content-type');
+      console.log('Response content-type:', contentType);
+      
+      if (!contentType || !contentType.startsWith('image/')) {
+        // If not an image, try to read as JSON for error message
+        const errorText = await response.text();
+        console.error('Expected image but got:', errorText);
+        throw new Error('Server returned invalid response format');
+      }
+      
       // Create a URL for the processed image blob
       const blob = await response.blob();
+      console.log('Received blob:', { size: blob.size, type: blob.type });
+      
+      if (blob.size === 0) {
+        throw new Error('Received empty image response');
+      }
+      
       const imageUrl = URL.createObjectURL(blob);
+      console.log('Created blob URL:', imageUrl);
       setProcessedImage(imageUrl);
     } catch (err) {
       setError(err.message || 'Failed to process image');
