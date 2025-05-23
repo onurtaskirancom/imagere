@@ -22,33 +22,73 @@ export default function Home() {
   const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB for Vercel
   const MAX_COMPRESSED_SIZE = 2 * 1024 * 1024; // 2MB target after compression
   
-  const compressImage = (file, quality = 0.8) => {
-    return new Promise((resolve) => {
+  const compressImage = (file, quality = 0.8, maxDimension = 2048) => {
+    return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      const img = new Image();
+      const img = document.createElement('img');
       
       img.onload = () => {
-        // Calculate new dimensions
-        let { width, height } = img;
-        const maxDimension = 2048; // Max 2048px on any side
-        
-        if (width > maxDimension || height > maxDimension) {
-          if (width > height) {
-            height = (height * maxDimension) / width;
-            width = maxDimension;
-          } else {
-            width = (width * maxDimension) / height;
-            height = maxDimension;
+        try {
+          // Calculate new dimensions with more aggressive scaling for large files
+          let { width, height } = img;
+          
+          // For very large files (>5MB), be more aggressive
+          if (file.size > 5 * 1024 * 1024) {
+            maxDimension = Math.min(maxDimension, 1536); // Max 1536px for large files
           }
+          
+          // For extremely large files (>10MB), be even more aggressive
+          if (file.size > 10 * 1024 * 1024) {
+            maxDimension = Math.min(maxDimension, 1024); // Max 1024px for very large files
+            quality = Math.min(quality, 0.6); // Lower quality for very large files
+          }
+          
+          // Calculate scaling ratio
+          const scale = Math.min(maxDimension / width, maxDimension / height, 1);
+          
+          const newWidth = Math.floor(width * scale);
+          const newHeight = Math.floor(height * scale);
+          
+          console.log('Compression settings:', {
+            originalSize: `${width}x${height}`,
+            newSize: `${newWidth}x${newHeight}`,
+            scale: scale.toFixed(2),
+            quality,
+            maxDimension
+          });
+          
+          canvas.width = newWidth;
+          canvas.height = newHeight;
+          
+          // Enable image smoothing for better quality
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          
+          // Draw and compress
+          ctx.drawImage(img, 0, 0, newWidth, newHeight);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Failed to compress image'));
+            }
+            
+            // Clean up
+            URL.revokeObjectURL(img.src);
+            canvas.width = 1;
+            canvas.height = 1;
+          }, 'image/jpeg', quality);
+          
+        } catch (error) {
+          console.error('Canvas compression error:', error);
+          reject(error);
         }
-        
-        canvas.width = width;
-        canvas.height = height;
-        
-        // Draw and compress
-        ctx.drawImage(img, 0, 0, width, height);
-        canvas.toBlob(resolve, 'image/jpeg', quality);
+      };
+      
+      img.onerror = () => {
+        reject(new Error('Failed to load image for compression'));
       };
       
       img.src = URL.createObjectURL(file);
@@ -66,45 +106,83 @@ export default function Home() {
       sizeInMB: (file.size / (1024 * 1024)).toFixed(2) + ' MB'
     });
     
-    // If file is too large, try to compress it
+    // If file is too large, try progressive compression
     if (file.size > MAX_FILE_SIZE) {
-      setError(null);
+      setError('Compressing large image, please wait...');
       
       try {
-        console.log('File too large, compressing...');
-        const compressedFile = await compressImage(file, 0.7);
+        console.log('File too large, starting progressive compression...');
         
-        console.log('Compressed file:', {
-          size: compressedFile.size,
-          sizeInMB: (compressedFile.size / (1024 * 1024)).toFixed(2) + ' MB'
-        });
+        let compressedFile;
+        let attempt = 1;
+        const maxAttempts = 4;
         
-        if (compressedFile.size > MAX_FILE_SIZE) {
-          // Try with lower quality
-          const moreCompressed = await compressImage(file, 0.5);
-          console.log('More compressed file:', {
-            size: moreCompressed.size,
-            sizeInMB: (moreCompressed.size / (1024 * 1024)).toFixed(2) + ' MB'
-          });
+        // Progressive compression strategy
+        const compressionSettings = [
+          { quality: 0.7, maxDimension: 2048 }, // First attempt
+          { quality: 0.5, maxDimension: 1536 }, // Second attempt
+          { quality: 0.3, maxDimension: 1024 }, // Third attempt
+          { quality: 0.2, maxDimension: 800 },  // Final attempt
+        ];
+        
+        for (const settings of compressionSettings) {
+          console.log(`Compression attempt ${attempt}/${maxAttempts}:`, settings);
           
-          if (moreCompressed.size > MAX_FILE_SIZE) {
-            setError(`Image is too large even after compression. Please use an image smaller than 4MB or with lower resolution.`);
-            e.target.value = '';
-            return;
+          try {
+            compressedFile = await compressImage(file, settings.quality, settings.maxDimension);
+            
+            console.log(`Attempt ${attempt} result:`, {
+              size: compressedFile.size,
+              sizeInMB: (compressedFile.size / (1024 * 1024)).toFixed(2) + ' MB',
+              reduction: (((file.size - compressedFile.size) / file.size) * 100).toFixed(1) + '%'
+            });
+            
+            // If compressed file is small enough, break the loop
+            if (compressedFile.size <= MAX_FILE_SIZE) {
+              break;
+            }
+            
+            attempt++;
+          } catch (attemptError) {
+            console.error(`Compression attempt ${attempt} failed:`, attemptError);
+            if (attempt === maxAttempts) {
+              throw attemptError;
+            }
+            attempt++;
           }
         }
         
+        // Final check
+        if (!compressedFile || compressedFile.size > MAX_FILE_SIZE) {
+          setError(`Unable to compress image below 4MB. Current size: ${(compressedFile?.size / (1024 * 1024) || 0).toFixed(2)}MB. Please use a smaller image or reduce resolution manually.`);
+          e.target.value = '';
+          return;
+        }
+        
+        // Create a new File object from the compressed blob
+        const compressedFileName = file.name.replace(/\.[^/.]+$/, '') + '_compressed.jpg';
+        const newFile = new File([compressedFile], compressedFileName, {
+          type: 'image/jpeg',
+          lastModified: Date.now()
+        });
+        
         // Replace the file in the input
         const dt = new DataTransfer();
-        dt.items.add(compressedFile);
+        dt.items.add(newFile);
         e.target.files = dt.files;
         
-        setError(`Image compressed from ${(file.size / (1024 * 1024)).toFixed(2)}MB to ${(compressedFile.size / (1024 * 1024)).toFixed(2)}MB`);
+        const reduction = (((file.size - compressedFile.size) / file.size) * 100).toFixed(1);
+        setError(`✅ Image compressed successfully! Size reduced by ${reduction}% (${(file.size / (1024 * 1024)).toFixed(2)}MB → ${(compressedFile.size / (1024 * 1024)).toFixed(2)}MB)`);
+        
       } catch (error) {
-        setError('Failed to compress image. Please try a smaller file.');
+        console.error('Compression failed:', error);
+        setError(`Failed to compress image: ${error.message}. Please try a smaller file or reduce the image resolution manually.`);
         e.target.value = '';
         return;
       }
+    } else {
+      // File is already small enough
+      setError(null);
     }
   };
   
